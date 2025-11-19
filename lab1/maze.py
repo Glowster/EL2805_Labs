@@ -82,6 +82,10 @@ class Maze:
         
         states[s] = 'Win'
         map['Win'] = s
+        s += 1
+
+        states[s] = 'Terminal'
+        map['Terminal'] = s
         
         return states, map
 
@@ -92,8 +96,8 @@ class Maze:
             :return list of tuples next_state: Possible states ((x,y), (x',y')) on the maze that the system can transition to.
         """
         
-        if self.states[state] == 'Eaten' or self.states[state] == 'Win': # In these states, the game is over
-            return [self.states[state]]
+        if self.states[state] == 'Eaten' or self.states[state] == 'Win' or self.states[state] == 'Terminal': # In these states, the game is over
+            return ['Terminal']
         
         else: # Compute the future possible positions given current (state, action)
             row_player = self.states[state][0][0] + self.actions[action][0] # Row of the player's next position 
@@ -183,7 +187,10 @@ class Maze:
                 
                 elif self.states[s] == 'Win': # The player has won
                     rewards[s, a] = self.GOAL_REWARD
-                
+
+                elif self.states[s] == 'Terminal':
+                    continue
+
                 else:                
                     next_states = self.__move(s,a)
                     next_s = next_states[0] # The reward does not depend on the next position of the minotaur, we just consider the first one
@@ -338,18 +345,17 @@ def animate_solution(maze, path):
         cell.set_width(1.0/cols)
 
     for i in range(0, len(path)):
-        if path[i-1] != 'Eaten' and path[i-1] != 'Win':
+        if path[i-1] not in ('Eaten', 'Win', 'Terminal'):
             grid.get_celld()[(path[i-1][0])].set_facecolor(col_map[maze[path[i-1][0]]])
             grid.get_celld()[(path[i-1][1])].set_facecolor(col_map[maze[path[i-1][1]]])
-        if path[i] != 'Eaten' and path[i] != 'Win':
+        if path[i] not in ('Eaten', 'Win', 'Terminal'):
             grid.get_celld()[(path[i][0])].set_facecolor(col_map[-2]) # Position of the player
             grid.get_celld()[(path[i][1])].set_facecolor(col_map[-1]) # Position of the minotaur
         display.display(fig)
         time.sleep(0.1)
         display.clear_output(wait = True)
 
-
-#%%
+# %%
 if __name__ == "__main__":
     # Description of the maze as a numpy array
     maze = np.array([
@@ -370,8 +376,8 @@ if __name__ == "__main__":
     # V, policy = dynamic_programming(env, horizon) 
 
     # Solve the MDP problem with value iteration
-    gamma = 0.9
-    epsilon = 0.01
+    gamma = 29/30
+    epsilon = 0.001
     method = "ValIter"
     V, policy = value_iteration(env, gamma, epsilon)
 
