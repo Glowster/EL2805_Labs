@@ -37,10 +37,10 @@ class Maze:
     }
 
     # Reward values 
-    STEP_REWARD =           #TODO
-    GOAL_REWARD =           #TODO
-    IMPOSSIBLE_REWARD =     #TODO
-    MINOTAUR_REWARD = -1
+    STEP_REWARD = 0
+    GOAL_REWARD = 1
+    IMPOSSIBLE_REWARD = 0
+    MINOTAUR_REWARD = 0
 
     def __init__(self, maze):
         """ Constructor of the environment Maze.
@@ -100,9 +100,8 @@ class Maze:
             col_player = self.states[state][0][1] + self.actions[action][1] # Column of the player's next position 
             
             # Is the player getting out of the limits of the maze or hitting a wall?
-            impossible_action_player =      #TODO
+            impossible_action_player = not((0 <= row_player < self.maze.shape[0]) and (0 <= col_player < self.maze.shape[1]) and self.maze[row_player,col_player] != 1)
             
-        
             actions_minotaur = [[0, -1], [0, 1], [-1, 0], [1, 0]] # Possible moves for the Minotaur
             rows_minotaur, cols_minotaur = [], []
             for i in range(len(actions_minotaur)):
@@ -122,10 +121,10 @@ class Maze:
                 states = []
                 for i in range(len(rows_minotaur)):
                     
-                    if          :                          # TODO: We met the minotaur
+                    if self.states[state][0][0] == rows_minotaur[i] and self.states[state][0][1] == cols_minotaur[i]:
                         states.append('Eaten')
                     
-                    elif        :                           # TODO: We are at the exit state, without meeting the minotaur
+                    elif self.maze[self.states[state][0][0], self.states[state][0][1]] == 2:
                         states.append('Win')
                 
                     else:     # The player remains in place, the minotaur moves randomly
@@ -137,10 +136,10 @@ class Maze:
                 states = []
                 for i in range(len(rows_minotaur)):
                 
-                    if          :                          # TODO: We met the minotaur
+                    if row_player == rows_minotaur[i] and col_player == cols_minotaur[i]:
                         states.append('Eaten')
                     
-                    elif        :                          # TODO:We are at the exit state, without meeting the minotaur
+                    elif self.maze[row_player,col_player] == 2:
                         states.append('Win')
                     
                     else: # The player moves, the minotaur moves randomly
@@ -159,12 +158,12 @@ class Maze:
         # Initialize the transition probailities tensor (S,S,A)
         dimensions = (self.n_states,self.n_states,self.n_actions)
         transition_probabilities = np.zeros(dimensions)
-
-        # TODO: Compute the transition probabilities.
   
-        
-  
-    
+        for s in range(self.n_states):
+            for a in range(self.n_actions):
+                possible_moves = self.__move(s,a)
+                for s_prime in possible_moves:
+                    transition_probabilities[self.map[s_prime],s,a] += 1/len(possible_moves)
     
         return transition_probabilities
 
@@ -217,7 +216,7 @@ class Maze:
             while t < horizon - 1:
                 a = policy[s, t] # Move to next state given the policy and the current state
                 next_states = self.__move(s, a) 
-                next_s = 
+                next_s = random.choice(next_states)
                 path.append(next_s) # Add the next state to the path
                 t +=1 # Update time and state for next iteration
                 s = self.map[next_s]
@@ -227,15 +226,15 @@ class Maze:
             s = self.map[start]
             path.append(start) # Add the starting position in the maze to the path
             next_states = self.__move(s, policy[s]) # Move to next state given the policy and the current state
-            next_s = 
+            next_s = random.choice(next_states)
             path.append(next_s) # Add the next state to the path
             
-            horizon =                               # Question e
+            horizon = np.random.geometric(1/30) # Question e
             # Loop while state is not the goal state
-            while s != next_s and t <= horizon:
+            while s != next_s and t <= horizon: # TODO change to is s_win or s_eaten /Viktor
                 s = self.map[next_s] # Update state
                 next_states = self.__move(s, policy[s]) # Move to next state given the policy and the current state
-                next_s = 
+                next_s = random.choice(next_states)
                 path.append(next_s) # Add the next state to the path
                 t += 1 # Update time for next iteration
         
@@ -265,12 +264,18 @@ def dynamic_programming(env, horizon):
         :return numpy.array policy: Optimal time-varying policy at every state,
                                     dimension S*T
     """
-    #TODO
 
-    V = np.zeros()
+    V = np.zeros((env.n_states,horizon))
+    policy = np.zeros((env.n_states,horizon))
 
+    V[:, horizon-1] = np.max(env.rewards, axis=1)
+    policy[:,horizon-1] = np.argmax(env.rewards, axis=1)
 
-
+    for t in range(horizon-2,-1,-1):
+        # max(rewards + transition[s_prime,s,a] * V[s_prime,t+1], axis=a)
+        Q = env.rewards + (env.transition_probabilities.T @ V[:,t+1]).T
+        V[:,t] = np.max(Q, axis=1)
+        policy[:,t] = np.argmax(Q, axis=1)
 
     return V, policy
 
@@ -281,17 +286,20 @@ def value_iteration(env, gamma, epsilon):
         :input float gamma        : The discount factor.
         :input float epsilon      : accuracy of the value iteration procedure.
         :return numpy.array V     : Optimal values for every state at every
-                                    time, dimension S*T
+                                    time, dimension S
         :return numpy.array policy: Optimal time-varying policy at every state,
-                                    dimension S*T
+                                    dimension S
     """
-    #TODO
 
-    V = np.zeros((env.n_states, horizon))
+    V = np.zeros(env.n_states)
+    err = epsilon*(1-gamma)/gamma + 1
 
-
-
-
+    while err > epsilon*(1-gamma)/gamma:
+        new_V = np.max(env.rewards + gamma*(env.transition_probabilities.T @ V).T, axis=1)
+        err = np.linalg.norm(new_V - V)
+        V = new_V
+    
+    policy = np.argmax(env.rewards + gamma*(env.transition_probabilities.T @ V).T, axis=1)
 
     return V, policy
 
@@ -341,7 +349,7 @@ def animate_solution(maze, path):
         display.clear_output(wait = True)
 
 
-
+#%%
 if __name__ == "__main__":
     # Description of the maze as a numpy array
     maze = np.array([
@@ -355,13 +363,19 @@ if __name__ == "__main__":
     # With the convention 0 = empty cell, 1 = obstacle, 2 = exit of the Maze
     
     env = Maze(maze) # Create an environment maze
-    horizon =        # TODO: Finite horizon
+    horizon = 20
 
     # Solve the MDP problem with dynamic programming
-    V, policy = dynamic_programming(env, horizon)  
+    # method = 'DynProg'
+    # V, policy = dynamic_programming(env, horizon) 
+
+    # Solve the MDP problem with value iteration
+    gamma = 0.9
+    epsilon = 0.01
+    method = "ValIter"
+    V, policy = value_iteration(env, gamma, epsilon)
 
     # Simulate the shortest path starting from position A
-    method = 'DynProg'
     start  = ((0,0), (6,5))
     path = env.simulate(start, policy, method)[0]
 
