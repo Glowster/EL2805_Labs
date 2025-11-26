@@ -277,12 +277,18 @@ def dynamic_programming(env, horizon):
 
     # Optimal Value Function
     V = np.zeros((env.n_states, horizon))
-
+    Q = np.zeros((env.n_state, env.actions, horizon))
     #for t = T_1, ..., 0 
+
+    V[env.map["Win"], horizon-1] = env.r
+
 
     rewards = env.__rewards()
 
     for t in range(horizon-1, -1, -1):
+        V[:, t] = np.max(rewards +  env.transition_probabilities[:, :, :] * V[:, t], axis = 1)
+
+
         for s in range(env.n_states):
             candidate_values = []
             for a in range(env.n_actions):
