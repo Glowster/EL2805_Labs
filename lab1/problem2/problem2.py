@@ -23,6 +23,13 @@ discount_factor = 1.    # Value of gamma
 episode_reward_list = []  # Used to save episodes reward
 
 
+
+eta = np.array((i,j) for i in range(3) for j in range(3)) # (9,2)
+
+m = eta.shape[0]
+
+weights = 
+
 # Functions used during training
 def running_average(x, N):
     ''' Function used to compute the running mean
@@ -54,7 +61,7 @@ for i in range(N_episodes):
         # env.action_space.n tells you the number of actions
         # available
         action = np.random.randint(0, k)
-            
+        
         # Get next state and reward.  The done variable
         # will be True if you reached the goal position,
         # False otherwise. Truncated is true if you reach 
