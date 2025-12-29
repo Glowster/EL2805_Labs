@@ -1,7 +1,3 @@
-# Copyright [2025] [KTH Royal Institute of Technology] 
-# Licensed under the Educational Community License, Version 2.0 (ECL-2.0)
-# This file is part of the materials for EL2805 - Reinforcement Learning - Exercise Session 3 at KTH, Stockholm.
-
 import numpy as np
 import torch
 import matplotlib.pyplot as plt

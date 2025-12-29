@@ -1,3 +1,5 @@
+# This file was altered. The original preamble is below.
+
 # Copyright [2025] [KTH Royal Institute of Technology] 
 # Licensed under the Educational Community License, Version 2.0 (ECL-2.0)
 # This file is part of the Computer Lab 2 for EL2805 - Reinforcement Learning.
